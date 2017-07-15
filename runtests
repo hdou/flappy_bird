@@ -1,0 +1,2 @@
+# run all unit tests in all files *.py under the tests folder 
+python -m unittest discover tests -p "*.py" -v
