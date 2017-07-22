@@ -1,9 +1,8 @@
+from __future__ import division
 
-from Tkinter import Tk, Canvas
 import logging.config
 import spritesheet
 import pygame
-from PIL import ImageTk
 
 
 logging.config.fileConfig('logging.conf')
@@ -11,13 +10,10 @@ logger = logging.getLogger('flappy_bird.graphic_display')
 
 class graphic_display:
     def __init__(self, game):
-        self.root = Tk()
-        self.root.title('Flappy Bird')
-        self.root.resizable(0,0)
         self.game = game
         
-        self.display_height = 300.0
-        self.display_width = 600.0
+        self.display_height = 300
+        self.display_width = 600
         self.x_margin = 10.0
         self.y_margin = 10.0
         self.x_factor = (self.display_width - 2*self.x_margin)/self.game.dx_loaded
@@ -27,40 +23,37 @@ class graphic_display:
         # out of the display, it can be deleted. pid -> (top_rect_id, bottom_rect_id)
         self.pillar_id_dict = {}
         
-        self.canvas = Canvas(self.root, width=self.display_width, height=self.display_height, background='white')        
+        pygame.init()
+        self.screen = pygame.display.set_mode((self.display_width, self.display_height))
+        pygame.display.set_caption('Flappy Bird')
+        self.clock = pygame.time.Clock()
+        
         self.update_display()
         
     def update_display(self):
         '''
         Update the game display
+        Return False if it has received the QUIT event; True Otherwise
         '''
-        current_pids = [p.pid for p in self.game.pillars]
-        logger.info('current pillars: {}'.format(current_pids))
-        displayed_pids = self.pillar_id_dict.keys()
-        logger.info('display pillars: {}'.format(displayed_pids))
-        removed_pids = set(displayed_pids) - set(current_pids)
-        new_pids = set(current_pids) - set(displayed_pids)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return False
         
-        for pid in removed_pids:
-            logger.info('Removing pillar from display - id={}'.format(pid))
-            (top_rect_id, bottom_rect_id) = self.pillar_id_dict[pid]
-            self.canvas.delete(top_rect_id)
-            self.canvas.delete(bottom_rect_id)
-            del self.pillar_id_dict[pid]
+        self.screen.fill((255,255,255))
         
         for pillar in self.game.pillars:
-            if pillar.pid in new_pids:
-                top_rect_id = self._create_rect(pillar.top_rect)
-                bottom_rect_id = self._create_rect(pillar.bottom_rect)
-                self.pillar_id_dict[pillar.pid] = (top_rect_id, bottom_rect_id)
-                logger.info('Adding pillar to display - id={}, rect_id={} {}'.format(pillar.pid, top_rect_id, bottom_rect_id))
-            else:
-                (top_rect_id, bottom_rect_id) = self.pillar_id_dict[pillar.pid]
-                self.move_rect(top_rect_id, pillar.top_rect)
-                self.move_rect(bottom_rect_id, pillar.bottom_rect)
-        self.canvas.pack()
-        self.canvas.update()
+            self.display_rect(pillar.top_rect)
+            self.display_rect(pillar.bottom_rect)
+        
+        pygame.display.flip()
+        self.clock.tick(60)      # 60 frames-per-second
+        
+        return True
     
+    def display_rect(self, rect):
+        x1, y1, x2, y2 = self._get_rect_display_coordinates(rect)
+        pygame.draw.rect(self.screen, (200, 200, 200), pygame.Rect(x1, y1, x2-x1, y2-y1))
+        
     def _get_rect_display_coordinates(self, rect):
         '''
         Returns the coordinates of the rect's bottom left corner and top right corner
@@ -73,15 +66,6 @@ class graphic_display:
         x2, y2 = self.game_coordinate_to_display_coordinate(x2, y2, self.game.x)
         return x1, y1, x2, y2
         
-    def _create_rect(self, rect):
-        x1, y1, x2, y2 = self._get_rect_display_coordinates(rect)
-        oid = self.canvas.create_rectangle(x1, y1, x2, y2, outline='gray', outlinestipple='gray25')
-        return oid
-    
-    def move_rect(self, oid, rect):
-        x1, y1, x2, y2 = self._get_rect_display_coordinates(rect)
-        self.canvas.coords(oid, x1, y1, x2, y2)
-    
     def game_coordinate_to_display_coordinate(self, x_game, y_game, x0_game):
         '''
         Convert from game coordinate to display coordinate

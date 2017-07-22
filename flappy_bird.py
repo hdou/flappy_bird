@@ -131,8 +131,9 @@ if __name__=='__main__':
     game = flappy_bird_game()
     presenter = graphic_display(game)
     begin_time = time.time()
-    while time.time() - begin_time < 10:
+    done = False
+    while time.time() - begin_time < 10 and not done:
         time.sleep(game.time_per_move)
         game.move()
-        presenter.update_display()
+        done = not presenter.update_display()
     
