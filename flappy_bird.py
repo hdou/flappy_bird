@@ -2,6 +2,14 @@
 
 import argparse
 import random
+from graphic_display import graphic_display
+import time
+
+import logging.config
+
+logging.config.fileConfig('logging.conf')
+logger = logging.getLogger('flappy_bird.game')
+
 
 class bird:
     '''
@@ -38,19 +46,19 @@ class flappy_bird_game:
     a constant speed of 1 distance unit/1 time unit.
     
     '''
-    def __init__(self, dx_loaded=10.0):
+    def __init__(self, dx_loaded=10.0, presenter=None):
         '''
         dx_loaded: objects within [x, x+dx_loaded] will be kept in memory
         '''
         self.x = 0.0
-        self.time_per_move = 0.2        # every consecutive moves are this time units apart
+        self.time_per_move = 0.5        # every consecutive moves are this time units apart
         self.dx_loaded=dx_loaded
-        self.height = 5
+        self.height = 5.0
         
         # parameters for the pillars
         self.pillar_width = 1.0
         self.pillar_x_interval = 4.0        # How far between consecutive pillars
-        self.pillar_gap = 0.2               # Gap between two parts of a pillar that can go through
+        self.pillar_gap = 1.0               # Gap between two parts of a pillar that can go through
         self.pillar_piece_min_length = 0.2  # Each piece of a pillar is at least this long
         self.pillar_x0 = 5.0                # First pillar's x
         
@@ -67,13 +75,17 @@ class flappy_bird_game:
         self.next_pillar_id = 0          # 0-based id of a pillar
         self.update_pillars()
     
+    def move(self):
+        self.x += self.time_per_move
+        self.update_pillars()
+        
     def update_pillars(self):
         '''
         Remove the pillars that are no longer in view, and create ones that come in view
         '''
         for p in self.pillars:
-            _, xmax = p.get_x_range()
-            if not self.should_be_loaded(xmax):
+            xmin, xmax = p.get_x_range()
+            if not self.should_be_loaded(xmax) and not self.should_be_loaded(xmin):
                 self.pillars.remove(p)
             
         xmin = self.get_pillar_x(self.next_pillar_id)
@@ -101,7 +113,8 @@ class flappy_bird_game:
         Create a pillar with pid
         '''
         x = self.get_pillar_x(pid)
-        bottom_length = random.random() * (self.height - 2 * self.pillar_piece_min_length - self.pillar_gap) + self.pillar_piece_min_length
+        r = random.random()
+        bottom_length = r * (self.height - 2 * self.pillar_piece_min_length - self.pillar_gap) + self.pillar_piece_min_length
         top_length = self.height - bottom_length - self.pillar_gap
         return pillar(pid, x, top_length, bottom_length, self.pillar_width, self.height)
     
@@ -114,4 +127,12 @@ if __name__=='__main__':
     
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     args = parser.parse_args()
+    
+    game = flappy_bird_game()
+    presenter = graphic_display(game)
+    begin_time = time.time()
+    while time.time() - begin_time < 10:
+        time.sleep(game.time_per_move)
+        game.move()
+        presenter.update_display()
     
