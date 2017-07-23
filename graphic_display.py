@@ -52,6 +52,9 @@ class graphic_display:
         
         # text related
         self.cached_fonts = {}
+        self.font_preferences = [
+                "Papyrus",
+                "Comic Sans MS"]
         
         self.was_game_over = self.game.is_game_over
 
@@ -89,6 +92,8 @@ class graphic_display:
             self.display_rect(pillar.top_rect, True)
             self.display_rect(pillar.bottom_rect, False)
 
+        self.display_score()
+        
         if not self.was_game_over and self.game.is_game_over:
             pygame.mixer.music.stop()
             pygame.mixer.music.load('res/sfx_hit.mp3')
@@ -189,12 +194,16 @@ class graphic_display:
         return font
 
     def display_game_over(self):
-        font_preferences = [
-                "Bizarre-Ass Font Sans Serif",
-                "They definitely dont have this installed Gothic",
-                "Papyrus",
-                "Comic Sans MS"]
-        font = self.get_font(font_preferences, 72)
+        font = self.get_font(self.font_preferences, 72)
         image = font.render("Game Over", True, (255,255,255))
         location = ((self.display_width - image.get_width())//2, (self.display_height - image.get_height())//2)
         self.screen.blit(image, location)
+
+    def display_score(self):
+        font = self.get_font(self.font_preferences, 36)
+        score_text = 'Score: {}'.format(self.game.score)
+        image = font.render(score_text, True, (255,255,255))
+        location = (450, 20)
+        self.screen.blit(image, location)
+        
+        

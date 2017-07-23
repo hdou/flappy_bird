@@ -145,13 +145,21 @@ class flappy_bird_game:
         self.update_pillars()
         
         self.is_game_over = not self.is_bird_alive()
+        self.score = 0
+        self.last_pillar_bird_passed = -1
         
     def score_update(self):
         '''
         Update the score
         '''
-        pass
-    
+        bird_rect = self.bird.get_rect()
+        bird_xmin = min(bird_rect[0][0], bird_rect[1][0])
+        for p in self.pillars:
+            _, pxmax = p.get_x_range()
+            if bird_xmin >= pxmax and p.pid > self.last_pillar_bird_passed:
+                self.score += 1
+                self.last_pillar_bird_passed = p.pid
+                
     def is_bird_alive(self):
         '''
         Check whether the game is over
@@ -178,7 +186,7 @@ class flappy_bird_game:
             self.score_update()
             self.is_game_over = not self.is_bird_alive()
             if self.is_game_over:
-                logging.info('game is over. Bird is at {}'.format(self.bird.get_rect()))
+                logging.info('game is over. Bird is at {}. Score: {}'.format(self.bird.get_rect(), self.score))
         
     def update_pillars(self):
         '''
