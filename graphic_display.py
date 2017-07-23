@@ -21,7 +21,7 @@ class graphic_display:
         self.y_factor = (self.display_height - 2*self.y_margin)/self.game.height
         
         pygame.init()
-        pygame.mixer.music.load('Yesterday.wav')
+        pygame.mixer.music.load('res/Yesterday.wav')
         pygame.mixer.music.play(-1)
         
         self.screen = pygame.display.set_mode((self.display_width, self.display_height))
@@ -50,7 +50,13 @@ class graphic_display:
         self.pillar_bot_img = pygame.transform.scale(self.pillar_bot_img, self.pillar_img_size)
         self.pillar_top_img = pygame.transform.flip(self.pillar_bot_img, False, True)
         
+        # text related
+        self.cached_fonts = {}
+        
+        self.was_game_over = self.game.is_game_over
+
         self.update_display()
+        
 
     def _load_bird_img(self, ss, rect):
         '''
@@ -78,7 +84,13 @@ class graphic_display:
                 quit_game = True
             if event.type == pygame.MOUSEBUTTONUP or event.type == pygame.KEYUP:
                 jump = True
-                
+        
+        if not self.was_game_over and self.game.is_game_over:
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load('res/sfx_hit.mp3')
+            pygame.mixer.music.play()
+        
+        self.was_game_over = self.game.is_game_over
         self.screen.fill((255,255,255))
         
         self.display_background()
@@ -88,7 +100,10 @@ class graphic_display:
         for pillar in self.game.pillars:
             self.display_rect(pillar.top_rect, True)
             self.display_rect(pillar.bottom_rect, False)
-        
+
+        if self.was_game_over:
+            self.display_game_over()
+                  
         pygame.display.flip()
         self.clock.tick(60)      # 60 frames-per-second
         
@@ -147,3 +162,32 @@ class graphic_display:
         y_display = self.display_height - y_game * self.y_factor - self.y_margin
         return x_display, y_display
         
+    def make_font(self, fonts, size):
+        available = pygame.font.get_fonts()
+        # get_fonts() returns a list of lowercase spaceless font names 
+        choices = map(lambda x:x.lower().replace(' ', ''), fonts)
+        for choice in choices:
+            if choice in available:
+                return pygame.font.SysFont(choice, size)
+        return pygame.font.Font(None, size)
+        
+    
+    def get_font(self, font_preferences, size):
+        global _cached_fonts
+        key = str(font_preferences) + '|' + str(size)
+        font = self.cached_fonts.get(key, None)
+        if font == None:
+            font = self.make_font(font_preferences, size)
+            self.cached_fonts[key] = font
+        return font
+
+    def display_game_over(self):
+        font_preferences = [
+                "Bizarre-Ass Font Sans Serif",
+                "They definitely dont have this installed Gothic",
+                "Papyrus",
+                "Comic Sans MS"]
+        font = self.get_font(font_preferences, 72)
+        image = font.render("Game Over", True, (255,255,255))
+        location = ((self.display_width - image.get_width())//2, (self.display_height - image.get_height())//2)
+        self.screen.blit(image, location)
