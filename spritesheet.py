@@ -12,7 +12,10 @@ import pygame
 class spritesheet(object):
     def __init__(self, filename):
         try:
-            self.sheet = pygame.image.load(filename).convert()
+            #self.sheet = pygame.image.load(filename).convert()
+            pyimg = pygame.image.load(filename)
+            self.imgsize = pyimg.get_rect().size
+            self.sheet = pyimg.convert()
         except pygame.error, message:
             print 'Unable to load spritesheet image:', filename
             raise SystemExit, message

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+from __future__ import division
 import argparse
 import random
 from graphic_display import graphic_display
@@ -16,8 +16,29 @@ class bird:
     Represent the bird
     '''
     def __init__(self, x, y):
-        pass
+        self.x = x
+        self.y = y
+        self.yspeed = 0
 
+        self.xspeed = 1
+        self.yaccelation = -2        # accelaration in y-direction
+        self.yspeed_after_jump = 2   # everytime the bird jumps, vy is set to this value
+        #self.yspeed_inc_per_jump = 1
+    
+    def move(self, dt, jumped=False):
+        '''
+        Move the bird with the current speeds of x and y
+        '''
+        self.x += self.xspeed * dt
+        y_old_speed = self.yspeed
+        self.yspeed += self.yaccelation * dt
+        if jumped:
+            logger.debug('bird jumped')
+            #self.yspeed += self.yspeed_inc_per_jump
+            self.yspeed = self.yspeed_after_jump
+        self.y += (y_old_speed + self.yspeed) / 2.0 * dt
+
+        logger.debug('bird vy={}, y={}'.format(self.yspeed, self.y))
 
 class pillar:
     '''
@@ -51,7 +72,7 @@ class flappy_bird_game:
         dx_loaded: objects within [x, x+dx_loaded] will be kept in memory
         '''
         self.x = 0.0
-        self.time_per_move = 0.5        # every consecutive moves are this time units apart
+        self.time_per_move = 0.1        # every consecutive moves are this time units apart
         self.dx_loaded=dx_loaded
         self.height = 5.0
         
@@ -65,19 +86,21 @@ class flappy_bird_game:
         # parameters for the bird
         self.bird_x0 = 1.0
         self.bird_y0 = 2.5
-        self.bird_vy0 = 0.0                 # start speed in y direction
-        self.bird_ay = -2.0                 # accelaration in y direction, in distance unit/square(time unit)
-        self.bird_vx = 1.0                  # bird in the x direction
-        self.bird_dvy = 4.0                 # vy increment per tap
+#         self.bird_vy0 = 0.0                 # start speed in y direction
+#         self.bird_ay = -2.0                 # accelaration in y direction, in distance unit/square(time unit)
+#         self.bird_vx = 1.0                  # bird in the x direction
+#         self.bird_dvy = 4.0                 # vy increment per tap
+        self.bird = bird(self.bird_x0, self.bird_y0)
 
         # create the pillars
         self.pillars = []
         self.next_pillar_id = 0          # 0-based id of a pillar
         self.update_pillars()
     
-    def move(self):
+    def move(self, jump=False):
         self.x += self.time_per_move
         self.update_pillars()
+        self.bird.move(self.time_per_move, jump)
         
     def update_pillars(self):
         '''
@@ -132,8 +155,9 @@ if __name__=='__main__':
     presenter = graphic_display(game)
     begin_time = time.time()
     done = False
-    while time.time() - begin_time < 10 and not done:
+    jump = False
+    while time.time() - begin_time < 100 and not done:
         time.sleep(game.time_per_move)
-        game.move()
-        done = not presenter.update_display()
+        game.move(jump)
+        done, jump = presenter.update_display()
     
