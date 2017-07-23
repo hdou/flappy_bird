@@ -31,7 +31,6 @@ class graphic_display:
         # backgroud
         ss = spritesheet.spritesheet('res/atlas.png')
         self.bg_img = ss.image_at((0.0, 0.0, 0.28125*ss.imgsize[0], 0.5*ss.imgsize[1]))
-        print 'background image size:', self.bg_img.get_rect().size
         
         # images for the bird
         bird_size = (36,36)
@@ -104,7 +103,12 @@ class graphic_display:
             self.bird_img_time = new_time
             self.bird_img_index = (self.bird_img_index + 1) % len(self.bird_imgs)
         bird_img = self.bird_imgs[self.bird_img_index]
-        x, y = self.game_coordinate_to_display_coordinate(self.game.bird.x, self.game.bird.y)
+        
+        # Find the left-top corner to anchor the image
+        rect = self.game.bird.get_rect()
+        anchor_x = min(rect[0][0], rect[1][0])
+        anchor_y = max(rect[0][1], rect[1][1])        
+        x, y = self.game_coordinate_to_display_coordinate(anchor_x, anchor_y)
         self.screen.blit(bird_img, (x, y))
     
     def display_rect(self, rect, isTop):

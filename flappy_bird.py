@@ -15,7 +15,8 @@ class bird:
     '''
     Represent the bird
     '''
-    def __init__(self, x, y):
+    def __init__(self, size, x, y):
+        self.size = size
         self.x = x
         self.y = y
         self.yspeed = 0
@@ -40,6 +41,12 @@ class bird:
 
         logger.debug('bird vy={}, y={}'.format(self.yspeed, self.y))
 
+    def get_rect(self):
+        '''
+        return the rect area that the bird occupies, in ((x, y), (x+width, x+height))
+        '''
+        return ((self.x, self.y), (self.x+self.size, self.y+self.size))
+    
 class pillar:
     '''
     Represent a pillar
@@ -59,6 +66,49 @@ class pillar:
     def __str__(self):
         return 'pillar {} (x={:.2f}, gap {:.2f})'.format(self.pid, self.x, self.bottom_rect[1][1])
     
+    def collide_with(self, rect):
+        '''
+        Check whether the pillar collides with the rectangle
+        '''
+        collided = collission_detector.collide(self.top_rect, rect) or collission_detector.collide(self.bottom_rect, rect)
+        if collided:
+            logging.info('{} collides with bird'.format(self))
+        return collided
+        
+class collission_detector:
+    @staticmethod
+    def collide(rect1, rect2):
+        '''
+        Check whether the two rectangulars overlap
+        The rectangulars are in ((x and y of one corner), (x and y of the opposite corner))
+        '''
+        rect1_x_min, rect1_x_max = collission_detector._get_x_min_max(rect1)
+        rect1_y_min, rect1_y_max = collission_detector._get_y_min_max(rect1)
+        rect2_x_min, rect2_x_max = collission_detector._get_x_min_max(rect2)
+        rect2_y_min, rect2_y_max = collission_detector._get_y_min_max(rect2)
+        
+        if (rect2_x_min <= rect1_x_min <= rect2_x_max or rect2_x_min <= rect1_x_max <= rect2_x_max) and \
+            (rect2_y_min <= rect1_y_min <= rect2_y_max or rect2_y_min <= rect1_y_max <= rect2_y_max):
+            return True
+        
+        if (rect1_x_min <= rect2_x_min <= rect1_x_max or rect1_x_min <= rect2_x_max <= rect1_x_max) and \
+            (rect1_y_min <= rect2_y_min <= rect1_y_max or rect1_y_min <= rect2_y_max <= rect1_y_max):
+            return True
+               
+        return False
+    
+    @staticmethod
+    def _get_x_min_max(rect):
+        if rect[0][0] < rect[1][0]:
+            return rect[0][0], rect[1][0]
+        return rect[1][0], rect[0][0]
+    
+    @staticmethod
+    def _get_y_min_max(rect):
+        if rect[0][1] < rect[1][1]:
+            return rect[0][1], rect[1][1]
+        return rect[1][1], rect[0][1]
+        
 class flappy_bird_game:
     '''
     Maintain the state of the game
@@ -79,28 +129,56 @@ class flappy_bird_game:
         # parameters for the pillars
         self.pillar_width = 1.0
         self.pillar_x_interval = 4.0        # How far between consecutive pillars
-        self.pillar_gap = 1.0               # Gap between two parts of a pillar that can go through
+        self.pillar_gap = 1.5               # Gap between two parts of a pillar that can go through
         self.pillar_piece_min_length = 0.2  # Each piece of a pillar is at least this long
         self.pillar_x0 = 5.0                # First pillar's x
         
         # parameters for the bird
+        self.bird_size = 0.5
         self.bird_x0 = 1.0
         self.bird_y0 = 2.5
-#         self.bird_vy0 = 0.0                 # start speed in y direction
-#         self.bird_ay = -2.0                 # accelaration in y direction, in distance unit/square(time unit)
-#         self.bird_vx = 1.0                  # bird in the x direction
-#         self.bird_dvy = 4.0                 # vy increment per tap
-        self.bird = bird(self.bird_x0, self.bird_y0)
+        self.bird = bird(self.bird_size, self.bird_x0, self.bird_y0)
 
         # create the pillars
         self.pillars = []
         self.next_pillar_id = 0          # 0-based id of a pillar
         self.update_pillars()
+        
+        self.is_game_over = not self.is_bird_alive()
+        
+    def score_update(self):
+        '''
+        Update the score
+        '''
+        pass
+    
+    def is_bird_alive(self):
+        '''
+        Check whether the game is over
+        '''
+        if self.is_bird_out_of_bound():
+            return False
+        bird_rect = self.bird.get_rect()
+        for p in self.pillars:
+            if p.collide_with(bird_rect):
+                return False
+        return True
+    
+    def is_bird_out_of_bound(self):
+        rect = self.bird.get_rect()
+        min_y = min(rect[0][1], rect[1][1])
+        max_y = max(rect[0][1], rect[1][1])
+        return min_y <= 0 or max_y >= self.height
     
     def move(self, jump=False):
-        self.x += self.time_per_move
-        self.update_pillars()
-        self.bird.move(self.time_per_move, jump)
+        if not self.is_game_over:
+            self.x += self.time_per_move
+            self.update_pillars()
+            self.bird.move(self.time_per_move, jump)
+            self.score_update()
+            self.is_game_over = not self.is_bird_alive()
+            if self.is_game_over:
+                logging.info('game is over. Bird is at {}'.format(self.bird.get_rect()))
         
     def update_pillars(self):
         '''
