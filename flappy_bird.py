@@ -23,7 +23,7 @@ class bird:
 
         self.xspeed = 1
         self.yaccelation = -2        # accelaration in y-direction
-        self.yspeed_after_jump = 2   # everytime the bird jumps, vy is set to this value
+        self.yspeed_after_jump = 1.5   # everytime the bird jumps, vy is set to this value
         #self.yspeed_inc_per_jump = 1
     
     def move(self, dt, jumped=False):
@@ -129,7 +129,7 @@ class flappy_bird_game:
         # parameters for the pillars
         self.pillar_width = 1.0
         self.pillar_x_interval = 4.0        # How far between consecutive pillars
-        self.pillar_gap = 1.5               # Gap between two parts of a pillar that can go through
+        self.pillar_gap = 2.0               # Gap between two parts of a pillar that can go through
         self.pillar_piece_min_length = 0.2  # Each piece of a pillar is at least this long
         self.pillar_x0 = 5.0                # First pillar's x
         

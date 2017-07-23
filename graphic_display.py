@@ -21,7 +21,8 @@ class graphic_display:
         self.y_factor = (self.display_height - 2*self.y_margin)/self.game.height
         
         pygame.init()
-        pygame.mixer.music.load('res/Yesterday.wav')
+        #pygame.mixer.music.load('res/Yesterday.wav')
+        pygame.mixer.music.load('res/Hopes and Dreams.mp3')
         pygame.mixer.music.play(-1)
         
         self.screen = pygame.display.set_mode((self.display_width, self.display_height))
