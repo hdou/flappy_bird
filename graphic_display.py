@@ -73,24 +73,12 @@ class graphic_display:
     def update_display(self):
         '''
         Update the game display
-        Return QUIT, MOUSEBUTTONUP events 
+        Return QUIT, MOUSEBUTTONUP, NEWGAME events 
         '''
         quit_game = False
         jump = False
-        
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.mixer.music.stop()
-                quit_game = True
-            if event.type == pygame.MOUSEBUTTONUP or event.type == pygame.KEYUP:
-                jump = True
-        
-        if not self.was_game_over and self.game.is_game_over:
-            pygame.mixer.music.stop()
-            pygame.mixer.music.load('res/sfx_hit.mp3')
-            pygame.mixer.music.play()
-        
-        self.was_game_over = self.game.is_game_over
+        new_game = False
+
         self.screen.fill((255,255,255))
         
         self.display_background()
@@ -101,13 +89,32 @@ class graphic_display:
             self.display_rect(pillar.top_rect, True)
             self.display_rect(pillar.bottom_rect, False)
 
+        if not self.was_game_over and self.game.is_game_over:
+            pygame.mixer.music.stop()
+            pygame.mixer.music.load('res/sfx_hit.mp3')
+            pygame.mixer.music.play()
+        self.was_game_over = self.game.is_game_over
+        
         if self.was_game_over:
             self.display_game_over()
                   
         pygame.display.flip()
         self.clock.tick(60)      # 60 frames-per-second
         
-        return quit_game, jump
+        pressed_keys = pygame.key.get_pressed() # for some reason this has to be after play the mp3 sound. Otherwise there is no sound
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.mixer.music.stop()
+                quit_game = True
+            if event.type == pygame.MOUSEBUTTONUP:
+                jump = True
+            if  event.type == pygame.KEYUP:
+                if pressed_keys[pygame.K_UP]:
+                    jump = True
+                elif pressed_keys[pygame.K_n]:
+                    new_game = True
+        
+        return quit_game, jump, new_game
     
     def display_background(self):
         bg_img_size = self.bg_img.get_rect().size

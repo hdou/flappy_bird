@@ -228,15 +228,20 @@ if __name__=='__main__':
     
     parser.add_argument('-v', '--version', action='version', version='%(prog)s 0.1')
     args = parser.parse_args()
-    
-    game = flappy_bird_game()
-    presenter = graphic_display(game)
-    begin_time = time.time()
-    done = False
-    jump = False
-    while time.time() - begin_time < 100 and not done:
-        #time.sleep(game.time_per_move)
-        time.sleep(0.15)
-        game.move(jump)
-        done, jump = presenter.update_display()
+
+    new_game = True
+    while new_game:
+        new_game = False
+        game = flappy_bird_game()
+        presenter = graphic_display(game)
+        done = False
+        jump = False
+        while not done and not new_game:
+            time.sleep(0.15)
+            game.move(jump)
+            done, jump, new_game = presenter.update_display()
+        if done:
+            break
+        
+
     
