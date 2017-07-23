@@ -134,7 +134,7 @@ class flappy_bird_game:
         self.pillar_x0 = 5.0                # First pillar's x
         
         # parameters for the bird
-        self.bird_size = 0.5
+        self.bird_size = 0.4
         self.bird_x0 = 1.0
         self.bird_y0 = 2.5
         self.bird = bird(self.bird_size, self.bird_x0, self.bird_y0)

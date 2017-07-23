@@ -33,13 +33,9 @@ class graphic_display:
         self.bg_img = ss.image_at((0.0, 0.0, 0.28125*ss.imgsize[0], 0.5*ss.imgsize[1]))
         
         # images for the bird
-        bird_size = (36,36)
-        bird_img1 = ss.image_at((0.0, 0.9472656*ss.imgsize[1], 0.046875*ss.imgsize[0], 0.046875*ss.imgsize[1]), -1)
-        bird_img1 = pygame.transform.scale(bird_img1, bird_size)
-        bird_img2 = ss.image_at((0.0546875*ss.imgsize[0], 0.9472656*ss.imgsize[1], 0.046875*ss.imgsize[0], 0.046875*ss.imgsize[1]), -1)
-        bird_img2 = pygame.transform.scale(bird_img2, bird_size)
-        bird_img3 = ss.image_at((0.109375*ss.imgsize[0], 0.9472656*ss.imgsize[1], 0.046875*ss.imgsize[0], 0.046875*ss.imgsize[1]), -1)
-        bird_img3 = pygame.transform.scale(bird_img3, bird_size)
+        bird_img1 = self._load_bird_img(ss, (0.0, 0.9472656, 0.046875, 0.046875))
+        bird_img2 = self._load_bird_img(ss, (0.0546875, 0.9472656, 0.046875, 0.046875))
+        bird_img3 = self._load_bird_img(ss, (0.109375, 0.9472656, 0.046875, 0.046875))
         self.bird_imgs = [bird_img1, bird_img2, bird_img3]
         self.bird_img_index = 0
         self.bird_img_time = time.time()
@@ -55,6 +51,18 @@ class graphic_display:
         self.pillar_top_img = pygame.transform.flip(self.pillar_bot_img, False, True)
         
         self.update_display()
+
+    def _load_bird_img(self, ss, rect):
+        '''
+        Load the bird image from the spritesheet
+        '''
+        ss_size = ss.imgsize
+        bird_logic_size = self.game.bird_size
+        bird_display_size = (int(bird_logic_size*self.x_factor), int(bird_logic_size*self.y_factor))
+        # the image has some edges. Clip them off by a few pixels at each side
+        bird_img = ss.image_at((rect[0]*ss_size[0]+7, rect[1]*ss_size[1]+10, rect[2]*ss_size[0]-15, rect[3]*ss_size[1]-15), -1)
+        bird_img = pygame.transform.scale(bird_img, bird_display_size)
+        return bird_img
         
     def update_display(self):
         '''
@@ -110,6 +118,7 @@ class graphic_display:
         anchor_y = max(rect[0][1], rect[1][1])        
         x, y = self.game_coordinate_to_display_coordinate(anchor_x, anchor_y)
         self.screen.blit(bird_img, (x, y))
+        #self.screen.blit(bird_img, (0, 0))
     
     def display_rect(self, rect, isTop):
         x1, y1, x2, y2 = self._get_rect_display_coordinates(rect)
