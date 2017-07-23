@@ -72,7 +72,7 @@ class flappy_bird_game:
         dx_loaded: objects within [x, x+dx_loaded] will be kept in memory
         '''
         self.x = 0.0
-        self.time_per_move = 0.1        # every consecutive moves are this time units apart
+        self.time_per_move = 0.2        # every consecutive moves are this time units apart
         self.dx_loaded=dx_loaded
         self.height = 5.0
         
@@ -157,7 +157,8 @@ if __name__=='__main__':
     done = False
     jump = False
     while time.time() - begin_time < 100 and not done:
-        time.sleep(game.time_per_move)
+        #time.sleep(game.time_per_move)
+        time.sleep(0.15)
         game.move(jump)
         done, jump = presenter.update_display()
     
