@@ -15,28 +15,37 @@ class bird:
     '''
     Represent the bird
     '''
+    # Some constant parameters
+    xspeed = 1
+    yaccelation = -2        # accelaration in y-direction
+    yspeed_after_jump = 1.5   # everytime the bird jumps, vy is set to this value
+    #yspeed_inc_per_jump = 1
+    
     def __init__(self, size, x, y):
         self.size = size
         self.x = x
         self.y = y
         self.yspeed = 0
 
-        self.xspeed = 1
-        self.yaccelation = -2        # accelaration in y-direction
-        self.yspeed_after_jump = 1.5   # everytime the bird jumps, vy is set to this value
-        #self.yspeed_inc_per_jump = 1
-    
+    def clone(self):
+        '''
+        clone a bird
+        '''
+        bird_copy = bird(self.size, self.x, self.y)
+        bird_copy.yspeed = self.yspeed
+        return bird_copy
+        
     def move(self, dt, jumped=False):
         '''
         Move the bird with the current speeds of x and y
         '''
-        self.x += self.xspeed * dt
+        self.x += bird.xspeed * dt
         y_old_speed = self.yspeed
-        self.yspeed += self.yaccelation * dt
+        self.yspeed += bird.yaccelation * dt
         if jumped:
             logger.debug('bird jumped')
             #self.yspeed += self.yspeed_inc_per_jump
-            self.yspeed = self.yspeed_after_jump
+            self.yspeed = bird.yspeed_after_jump
         self.y += (y_old_speed + self.yspeed) / 2.0 * dt
 
         logger.debug('bird vy={}, y={}'.format(self.yspeed, self.y))
@@ -117,26 +126,30 @@ class flappy_bird_game:
     a constant speed of 1 distance unit/1 time unit.
     
     '''
+    
+    # Constant parameters
+    time_per_move = 0.2        # every consecutive moves are this time units apart
+    height = 5.0
+    
+    # parameters for the pillars
+    pillar_width = 1.0
+    pillar_x_interval = 4.0        # How far between consecutive pillars
+    pillar_gap = 2.0               # Gap between two parts of a pillar that can go through
+    pillar_piece_min_length = 0.2  # Each piece of a pillar is at least this long
+    pillar_x0 = 5.0                # First pillar's x
+
+    # parameters for the bird
+    bird_size = 0.4
+    bird_x0 = 1.0
+    bird_y0 = 2.5
+
     def __init__(self, dx_loaded=10.0, presenter=None):
         '''
         dx_loaded: objects within [x, x+dx_loaded] will be kept in memory
         '''
         self.x = 0.0
-        self.time_per_move = 0.2        # every consecutive moves are this time units apart
         self.dx_loaded=dx_loaded
-        self.height = 5.0
-        
-        # parameters for the pillars
-        self.pillar_width = 1.0
-        self.pillar_x_interval = 4.0        # How far between consecutive pillars
-        self.pillar_gap = 2.0               # Gap between two parts of a pillar that can go through
-        self.pillar_piece_min_length = 0.2  # Each piece of a pillar is at least this long
-        self.pillar_x0 = 5.0                # First pillar's x
-        
-        # parameters for the bird
-        self.bird_size = 0.4
-        self.bird_x0 = 1.0
-        self.bird_y0 = 2.5
+                
         self.bird = bird(self.bird_size, self.bird_x0, self.bird_y0)
 
         # create the pillars
@@ -145,8 +158,26 @@ class flappy_bird_game:
         self.update_pillars()
         
         self.is_game_over = not self.is_bird_alive()
+        self.just_scored = False
         self.score = 0
         self.last_pillar_bird_passed = -1
+    
+    def clone_game(self):
+        '''
+        Make a clone of the game
+        '''
+        game = flappy_bird_game()
+        game.x = self.x
+        game.dx_loaded = self.dx_loaded
+        game.bird = self.bird.clone()
+        game.pillars = self.pillars[:]      # pillars are immutable, thus no need to deep copy
+        game.next_pillar_id = self.next_pillar_id
+        game.is_game_over = self.is_game_over
+        game.score = self.score
+        game.just_scored = self.just_scored
+        game.last_pillar_bird_passed = self.last_pillar_bird_passed
+        
+        return game
         
     def score_update(self):
         '''
@@ -157,8 +188,11 @@ class flappy_bird_game:
         for p in self.pillars:
             _, pxmax = p.get_x_range()
             if bird_xmin >= pxmax and p.pid > self.last_pillar_bird_passed:
+                self.just_scored = True
                 self.score += 1
                 self.last_pillar_bird_passed = p.pid
+            else:
+                self.just_scored = False
                 
     def is_bird_alive(self):
         '''
@@ -227,6 +261,16 @@ class flappy_bird_game:
         top_length = self.height - bottom_length - self.pillar_gap
         return pillar(pid, x, top_length, bottom_length, self.pillar_width, self.height)
     
+    def get_legal_actions(self):
+        '''
+        Return the legal moves at the current state of the game:
+        x: game over
+        j: jump
+        n: no jump
+        '''
+        if self.is_game_over:
+            return []
+        return [True, False]
     
 if __name__=='__main__':
     parser = argparse.ArgumentParser('Flappy bird game with reinforcement learning')
