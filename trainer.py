@@ -11,6 +11,7 @@ import logging.config
 import math
 import pickle
 import os
+import time
 
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger('flappy_bird.trainer')
@@ -59,8 +60,17 @@ class trainer:
         state_y is that of vertical distance, and
         state_vy is that of the vertical speed
         '''
-        dx = game.pillars[0].x + game.pillar_width - game.bird.x
-        dy = game.bird.y - game.pillars[0].bottom_rect[1][1]
+        pillar_idx = 0
+        for i in xrange(len(game.pillars)):
+            p = game.pillars[i]
+            _, p_x_max = p.get_x_range()
+            if p_x_max > game.bird.x:
+                pillar_idx = i
+                break
+        dx = game.pillars[pillar_idx].x + game.pillar_width - game.bird.x
+        dy = game.bird.y - game.pillars[pillar_idx].bottom_rect[1][1]
+        print 'pillar {} is the reference'.format(pillar_idx)
+        print 'state dx={:.2f} dy={:.2f}, vy={:.2f}'.format(dx, dy, game.bird.yspeed)
         logging.debug('state dx={:.2f} dy={:.2f}, vy={:.2f}'.format(dx, dy, game.bird.yspeed))
         state_x = self._quantify_distance_x(dx)
         state_y = self._quantify_distance_y(dy)
@@ -90,6 +100,7 @@ class trainer:
     def _prompt(self):
         print 'Select from following options:'
         print ' x: quit'
+        print ' p: play the game with learned Q-table'
         print ' q: show Q-table'
         print ' s: store Q-table'
         print ' <n>: train n sessions'
@@ -97,6 +108,20 @@ class trainer:
         user_input = raw_input('What do you want to do:')
         return user_input
     
+    def play(self):
+        '''
+        Play the game using learned Q-table
+        '''
+        game = flappy_bird_game()
+        display = graphic_display(game)
+        while not game.is_game_over:
+            actions = game.get_legal_actions()
+            scores = [self.get_action_value(game, act) for act in actions]
+            action, _ = self.select_action_with_max_score(actions, scores)
+            game.move(action)
+            time.sleep(0.15)
+            display.update_display()
+        
     def train(self):
         '''
         run the training sessions
@@ -110,6 +135,9 @@ class trainer:
             elif user_input == 's':
                 pickle.dump(self.QTable, open(self.QTable_file, 'wb'))
                 print 'Stored Q-table'
+            elif user_input == 'p':
+                # play the game using the learned Q-table
+                self.play()
             elif user_input == '':
                 self.train_one_session()
             else:
