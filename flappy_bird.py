@@ -81,7 +81,7 @@ class pillar:
         '''
         collided = collission_detector.collide(self.top_rect, rect) or collission_detector.collide(self.bottom_rect, rect)
         if collided:
-            logging.info('{} collides with bird'.format(self))
+            logging.debug('{} collides with bird'.format(self))
         return collided
         
 class collission_detector:
@@ -191,8 +191,6 @@ class flappy_bird_game:
                 self.just_scored = True
                 self.score += 1
                 self.last_pillar_bird_passed = p.pid
-            else:
-                self.just_scored = False
                 
     def is_bird_alive(self):
         '''
@@ -213,6 +211,7 @@ class flappy_bird_game:
         return min_y <= 0 or max_y >= self.height
     
     def move(self, jump=False):
+        self.just_scored = False
         if not self.is_game_over:
             self.x += self.time_per_move
             self.update_pillars()
@@ -220,7 +219,7 @@ class flappy_bird_game:
             self.score_update()
             self.is_game_over = not self.is_bird_alive()
             if self.is_game_over:
-                logging.info('game is over. Bird is at {}. Score: {}'.format(self.bird.get_rect(), self.score))
+                logging.debug('game is over. Bird is at {}. Score: {}'.format(self.bird.get_rect(), self.score))
         
     def update_pillars(self):
         '''
