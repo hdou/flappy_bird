@@ -135,7 +135,7 @@ class flappy_bird_game:
     pillar_width = 1.0
     pillar_x_interval = 4.0        # How far between consecutive pillars
     pillar_gap = 2.0               # Gap between two parts of a pillar that can go through
-    pillar_piece_min_length = 0.2  # Each piece of a pillar is at least this long
+    pillar_piece_min_length = 0.6  # Each piece of a pillar is at least this long
     pillar_x0 = 5.0                # First pillar's x
 
     # parameters for the bird
