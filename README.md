@@ -10,7 +10,7 @@ Two reinforcement learning algorithms implemented:
   b) distance to the gap (20% from the bottom) when the bird is not in the gap<br>
   c) same as b) except when the bird is in the gap<br>
 
-# Manual play
+# Manual Play
 python flappy_bird.py
 
 # Run Standard Q-learning:
