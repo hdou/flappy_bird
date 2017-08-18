@@ -72,6 +72,14 @@ class pillar:
     def get_x_range(self):
         return self.x, self.x+self.width
     
+    def get_gap_y_range(self):
+        '''
+        returns the vertical range of the gap: y_min, y_max
+        '''
+        y_min = self.bottom_rect[1][1]
+        y_max = self.top_rect[0][1]
+        return y_min, y_max
+    
     def __str__(self):
         return 'pillar {} (x={:.2f}, gap {:.2f})'.format(self.pid, self.x, self.bottom_rect[1][1])
     

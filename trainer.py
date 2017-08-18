@@ -298,7 +298,7 @@ class trainer:
         '''
         Returns the action based on the scores
         '''
-        action_indices_with_max_scores = [i for i, x in enumerate(scores)]
+        action_indices_with_max_scores = [i for i, _ in enumerate(scores)]
         # randomly choose one with max score
         idx = int(math.floor(random.random()*len(action_indices_with_max_scores)))
         idx = action_indices_with_max_scores[idx]
