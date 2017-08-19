@@ -226,24 +226,32 @@ class feature_trainer:
         
         return dy, dy_gap, dy_gap_in_gap
     
-    def play(self):
+    def play(self, delay_in_not_silent_mode=0.15, silent_mode=False ):
         '''
         play the game based on learned weights
         '''
         game = flappy_bird_game()
-        display = graphic_display(game)
+        
+        if silent_mode:
+            display = null_display(game, 1000)
+        else:
+            display = graphic_display(game)
+            
         while not game.is_game_over:
             actions = game.get_legal_actions()
             action, _ = self.selection_action_with_max_value(game, actions, False)
             game.move(action)
             
-            time.sleep(0.15)
+            if not silent_mode:
+                time.sleep(delay_in_not_silent_mode)
             display.update_display()
 
     def _prompt(self):
         print 'Select from following options:'
         print ' x: quit'
         print ' p: play the game with learned weights'
+        print ' pf: play the game for human viewing but running faster'
+        print ' ps: play the game in silent mode, without delays for human to view'
         print ' w: show the weights'
         print ' s: store the weights'
         print ' <Return>: one interactive training session'
@@ -264,6 +272,10 @@ class feature_trainer:
                 self.train_one_session()
             elif user_input == 'p':
                 self.play()
+            elif user_input == 'pf':
+                self.play(delay_in_not_silent_mode=0.005)
+            elif user_input == 'ps':
+                self.play(silent_mode=True)
             user_input = self._prompt()
             
     def get_action_text(self, action):
