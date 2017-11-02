@@ -4,6 +4,7 @@ import logging.config
 import spritesheet
 import pygame
 import time
+import numpy as np
 
 
 logging.config.fileConfig('logging.conf')
@@ -207,4 +208,40 @@ class graphic_display:
         location = (450, 20)
         self.screen.blit(image, location)
         
-        
+    def get_image_pixels_old(self):
+        '''
+        Returns the screen pixel in the following format:
+        1. It's 1-d list with size 3 * rows * columns
+        2. It concatenates pixels row after row
+        3. Each pixel uses 3 consecutive elements represenging r,g,b respectively
+        '''
+        p = []
+        pixel_array = pygame.PixelArray(self.screen)
+        for i in xrange(self.display_height):
+            for j in xrange(self.display_width):
+                v = pixel_array[j,i]
+                p.append((v >> 8) & 0xFF)       # r
+                p.append((v >> 16) & 0xFF)      # g
+                p.append((v >> 24) & 0xFF)      # b
+        del pixel_array
+        return p
+
+    def get_image_pixels(self):
+        '''
+        Returns the screen pixel in a numpy array in shape (row, column, 3)
+        '''
+        #pixels = np.zeros((self.display_height, self.display_width, 3), dtype=np.int8)
+        pixels = np.zeros((self.display_height, self.display_width, 3))
+        pixel_array = pygame.PixelArray(self.screen)
+        for i in xrange(self.display_height):
+            for j in xrange(self.display_width):
+                v = pixel_array[j,i]
+                r = (v >> 8) & 0xFF
+                g = (v >> 16) & 0xFF
+                b = (v >> 24) & 0xFF
+                #pixels[(i,j)] = [r,g,b]
+                pixels[(i,j)] = [r/255.0,g/255.0,b/255.0]
+        del pixel_array
+
+        return pixels
+
